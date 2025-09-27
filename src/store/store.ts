@@ -3,10 +3,12 @@ import { persistStore, persistReducer } from 'redux-persist';
 import storage from 'redux-persist/lib/storage';
 import candidateReducer from './slices/candidateSlice';
 import chatReducer from './slices/chatSlice';
+import answersReducer from './slices/answersSlice';
 
 const rootReducer = combineReducers({
   candidate: candidateReducer,
   chat: chatReducer,
+  answers: answersReducer,
 });
 
 const persistConfig = {
