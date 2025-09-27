@@ -26,8 +26,23 @@ const candidateSlice = createSlice({
     setParsingError(state, action: PayloadAction<string>) {
       state.error = action.payload;
     },
+    setCandidateName(state, action: PayloadAction<string | null>) {
+      state.info.name = action.payload;
+    },
+    setCandidateEmail(state, action: PayloadAction<string | null>) {
+      state.info.email = action.payload;
+    },
+    setCandidatePhone(state, action: PayloadAction<string | null>) {
+      state.info.phone = action.payload;
+    },
   },
 });
 
-export const { setCandidateInfo, setParsingError } = candidateSlice.actions;
+export const {
+  setCandidateInfo,
+  setParsingError,
+  setCandidateName,
+  setCandidateEmail,
+  setCandidatePhone,
+} = candidateSlice.actions;
 export default candidateSlice.reducer;

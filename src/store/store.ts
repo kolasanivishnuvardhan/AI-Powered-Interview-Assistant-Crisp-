@@ -2,9 +2,11 @@ import { combineReducers, configureStore } from '@reduxjs/toolkit';
 import { persistStore, persistReducer } from 'redux-persist';
 import storage from 'redux-persist/lib/storage';
 import candidateReducer from './slices/candidateSlice';
+import chatReducer from './slices/chatSlice';
 
 const rootReducer = combineReducers({
   candidate: candidateReducer,
+  chat: chatReducer,
 });
 
 const persistConfig = {
