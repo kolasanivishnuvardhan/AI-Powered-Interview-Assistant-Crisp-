@@ -88,7 +88,7 @@ const InterviewerPage: React.FC = () => {
         })}
       />
       <CandidateDetailModal
-        visible={isModalVisible}
+        open={isModalVisible}
         onClose={handleModalClose}
         candidate={selectedCandidate}
       />

@@ -6,12 +6,12 @@ import { Question } from '../types/interview';
 const { Title, Text } = Typography;
 
 interface CandidateDetailModalProps {
-  visible: boolean;
+  open: boolean;
   onClose: () => void;
   candidate: CompletedCandidate | null;
 }
 
-const CandidateDetailModal: React.FC<CandidateDetailModalProps> = ({ visible, onClose, candidate }) => {
+const CandidateDetailModal: React.FC<CandidateDetailModalProps> = ({ open, onClose, candidate }) => {
   if (!candidate) {
     return null;
   }
@@ -23,7 +23,7 @@ const CandidateDetailModal: React.FC<CandidateDetailModalProps> = ({ visible, on
   return (
     <Modal
       title="Candidate Interview Details"
-      visible={visible}
+      open={open}
       onCancel={onClose}
       footer={null}
       width={800}

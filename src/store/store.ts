@@ -16,7 +16,7 @@ const rootReducer = combineReducers({
 const persistConfig = {
   key: 'root',
   storage,
-  whitelist: ['candidate', 'candidates'], // Persist current candidate and historical candidates
+  whitelist: ['candidate', 'candidates', 'answers', 'chat'], // Persist session and historical data
 };
 
 const persistedReducer = persistReducer(persistConfig, rootReducer);

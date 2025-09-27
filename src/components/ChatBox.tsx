@@ -7,6 +7,7 @@ import { addMessage, clearChat } from '../store/slices/chatSlice';
 import { resetCandidate, setCandidateName, setCandidateEmail, setCandidatePhone } from '../store/slices/candidateSlice';
 import { resetAnswers, startInterview, submitAnswer } from '../store/slices/answersSlice';
 import { addCompletedCandidate } from '../store/slices/candidatesSlice';
+import { v4 as uuidv4 } from 'uuid';
 import { generateInterviewQuestions, evaluateAnswer, generateSummary } from '../utils/ai';
 import { ChatMessage } from '../types/chat';
 import { CompletedCandidate } from '../types/candidate';
@@ -20,7 +21,7 @@ const ChatBox: React.FC = () => {
   const dispatch: AppDispatch = useDispatch();
   const { info: candidateInfo } = useSelector((state: RootState) => state.candidate);
   const { messages } = useSelector((state: RootState) => state.chat);
-  const { questions, answers, currentQuestionIndex, interviewStatus } = useSelector((state: RootState) => state.answers);
+  const { questions, answers, currentQuestionIndex, interviewStatus, currentQuestionStartTime } = useSelector((state: RootState) => state.answers);
 
   const [inputValue, setInputValue] = useState('');
   const [infoState, setInfoState] = useState<InfoCollectionState>('complete');
@@ -183,11 +184,16 @@ const ChatBox: React.FC = () => {
         />
       </div>
 
-      {isInterviewActive && (
+      {isInterviewActive && currentQuestionStartTime && (
         <>
           <Divider />
           <Space direction="vertical" align="center" style={{ width: '100%' }}>
-            <Timer key={currentQuestion.id} duration={currentQuestion.timeLimit} onTimeUp={() => handleSubmitAnswer(inputValue)} />
+            <Timer
+              key={currentQuestion.id}
+              duration={currentQuestion.timeLimit}
+              startTime={currentQuestionStartTime}
+              onTimeUp={() => handleSubmitAnswer(inputValue)}
+            />
             <Input.TextArea
               rows={4}
               value={inputValue}

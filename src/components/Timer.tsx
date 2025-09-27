@@ -1,29 +1,32 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { Progress, Typography } from 'antd';
 
 const { Text } = Typography;
 
 interface TimerProps {
   duration: number; // in seconds
+  startTime: number; // JS timestamp (ms) when the timer started
   onTimeUp: () => void;
 }
 
-const Timer: React.FC<TimerProps> = ({ duration, onTimeUp }) => {
-  const [timeLeft, setTimeLeft] = useState(duration);
+const Timer: React.FC<TimerProps> = ({ duration, startTime, onTimeUp }) => {
+  const [now, setNow] = useState(Date.now());
+
+  const timeLeft = useMemo(() => {
+    const elapsed = Math.floor((now - startTime) / 1000);
+    return Math.max(0, duration - elapsed);
+  }, [now, startTime, duration]);
 
   useEffect(() => {
-    // Exit early if time is up
     if (timeLeft <= 0) {
       onTimeUp();
       return;
     }
 
-    // Set up the interval
     const intervalId = setInterval(() => {
-      setTimeLeft((prevTime) => prevTime - 1);
+      setNow(Date.now());
     }, 1000);
 
-    // Clean up the interval on component unmount or when time is up
     return () => clearInterval(intervalId);
   }, [timeLeft, onTimeUp]);
 
