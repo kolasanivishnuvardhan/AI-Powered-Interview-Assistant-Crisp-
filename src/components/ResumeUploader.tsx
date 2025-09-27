@@ -51,7 +51,7 @@ const ResumeUploader: React.FC = () => {
           />
         )}
 
-        {candidateInfo.name && (
+        {candidateInfo.name && !error && (
           <Card title="Extracted Information" style={{ marginTop: '20px' }}>
             <Descriptions bordered column={1}>
               <Descriptions.Item label="Name">

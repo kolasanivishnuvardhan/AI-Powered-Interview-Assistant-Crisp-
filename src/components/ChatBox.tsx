@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
-import { Input, Button, List, Avatar, Card, Space, Divider, Typography } from 'antd';
+import { Input, Button, List, Avatar, Card, Space, Divider, Typography, Progress } from 'antd';
 import { UserOutlined, RobotOutlined } from '@ant-design/icons';
 import { RootState, AppDispatch } from '../store';
 import { addMessage, clearChat } from '../store/slices/chatSlice';
@@ -168,6 +168,12 @@ const ChatBox: React.FC = () => {
 
   return (
     <Card title="AI Interview Assistant">
+      {isInterviewActive && (
+        <div style={{ padding: '0 16px 16px' }}>
+          <Text>{`Question ${currentQuestionIndex + 1} of ${questions.length}`}</Text>
+          <Progress percent={((currentQuestionIndex + 1) / questions.length) * 100} showInfo={false} status="active" />
+        </div>
+      )}
       <div ref={listRef} style={{ height: '400px', overflowY: 'auto', padding: '16px', border: '1px solid #f0f0f0', marginBottom: '16px' }}>
         <List
           itemLayout="horizontal"
