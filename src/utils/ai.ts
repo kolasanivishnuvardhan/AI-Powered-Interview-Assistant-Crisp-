@@ -1,4 +1,4 @@
-import { Question, QuestionLevel } from '../types/interview';
+import { Question, QuestionLevel, Answer } from '../types/interview';
 
 const questionsBank: Record<QuestionLevel, { text: string; timeLimit: number }[]> = {
   Easy: [
@@ -51,4 +51,39 @@ export const generateQuestion = (level: QuestionLevel): Question => {
     level,
     ...question,
   };
+};
+
+/**
+ * Mock function to evaluate an answer and return a score.
+ * The score is based on the question's difficulty and the length of the answer.
+ * @param question The question that was answered.
+ * @param answer The user's answer.
+ * @returns A score for the answer.
+ */
+export const evaluateAnswer = (question: Question, answer: Answer): number => {
+  if (!answer.text.trim()) {
+    return 0; // No score for an empty answer.
+  }
+
+  // Mock scoring logic: score is proportional to answer length, up to the max for the level.
+  const answerLengthFactor = Math.min(answer.text.length / 100, 1); // Normalize length up to 100 chars
+
+  switch (question.level) {
+    case 'Easy':
+      return Math.round(answerLengthFactor * 10);
+    case 'Medium':
+      return Math.round(answerLengthFactor * 20);
+    case 'Hard':
+      return Math.round(answerLengthFactor * 25);
+    default:
+      return 0;
+  }
+};
+
+/**
+ * Generates a mock final summary for the interview.
+ * @returns A hardcoded summary string.
+ */
+export const generateSummary = (): string => {
+  return 'Candidate demonstrated strengths in communication and problem-solving, but needs improvement in providing specific, detailed examples from past experiences.';
 };

@@ -4,9 +4,9 @@ import { Input, Button, List, Avatar, Card, Space, Divider, Typography } from 'a
 import { UserOutlined, RobotOutlined } from '@ant-design/icons';
 import { RootState, AppDispatch } from '../store';
 import { addMessage } from '../store/slices/chatSlice';
-import { setCandidateName, setCandidateEmail, setCandidatePhone } from '../store/slices/candidateSlice';
+import { setCandidateName, setCandidateEmail, setCandidatePhone, setInterviewResult } from '../store/slices/candidateSlice';
 import { startInterview, submitAnswer } from '../store/slices/answersSlice';
-import { generateInterviewQuestions } from '../utils/ai';
+import { generateInterviewQuestions, evaluateAnswer, generateSummary } from '../utils/ai';
 import { ChatMessage } from '../types/chat';
 import Timer from './Timer';
 
@@ -16,9 +16,9 @@ type InfoCollectionState = 'name' | 'email' | 'phone' | 'confirmation' | 'ready_
 
 const ChatBox: React.FC = () => {
   const dispatch: AppDispatch = useDispatch();
-  const { info: candidateInfo } = useSelector((state: RootState) => state.candidate);
+  const { info: candidateInfo, finalScore } = useSelector((state: RootState) => state.candidate);
   const { messages } = useSelector((state: RootState) => state.chat);
-  const { questions, currentQuestionIndex, interviewStatus } = useSelector((state: RootState) => state.answers);
+  const { questions, answers, currentQuestionIndex, interviewStatus } = useSelector((state: RootState) => state.answers);
 
   const [inputValue, setInputValue] = useState('');
   const [infoState, setInfoState] = useState<InfoCollectionState>('complete');
@@ -68,10 +68,25 @@ const ChatBox: React.FC = () => {
   useEffect(() => {
     if (interviewStatus === 'in_progress' && currentQuestion) {
       sendBotMessage(`Question ${currentQuestionIndex + 1}/${questions.length} (${currentQuestion.level}):\n${currentQuestion.text}`);
-    } else if (interviewStatus === 'completed') {
-      sendBotMessage("Thank you for completing the interview! We will be in touch with the next steps.");
     }
   }, [interviewStatus, currentQuestionIndex, questions.length, currentQuestion, sendBotMessage]);
+
+  useEffect(() => {
+    if (interviewStatus === 'completed' && answers.length === questions.length && questions.length > 0 && !finalScore) {
+      let totalScore = 0;
+      for (const answer of answers) {
+        const question = questions.find(q => q.id === answer.questionId);
+        if (question) {
+          totalScore += evaluateAnswer(question, answer);
+        }
+      }
+
+      const summary = generateSummary();
+      dispatch(setInterviewResult({ finalScore: totalScore, summary }));
+
+      sendBotMessage(`Thank you for completing the interview! \n\nYour final score is ${totalScore}/110. \n\nSummary: ${summary}`);
+    }
+  }, [interviewStatus, answers, questions, finalScore, dispatch, sendBotMessage]);
 
   const handleSubmitAnswer = useCallback((answerText: string) => {
     if (!currentQuestion) return;
