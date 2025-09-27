@@ -3,11 +3,13 @@ import { useDispatch, useSelector } from 'react-redux';
 import { Input, Button, List, Avatar, Card, Space, Divider, Typography } from 'antd';
 import { UserOutlined, RobotOutlined } from '@ant-design/icons';
 import { RootState, AppDispatch } from '../store';
-import { addMessage } from '../store/slices/chatSlice';
-import { setCandidateName, setCandidateEmail, setCandidatePhone, setInterviewResult } from '../store/slices/candidateSlice';
-import { startInterview, submitAnswer } from '../store/slices/answersSlice';
+import { addMessage, clearChat } from '../store/slices/chatSlice';
+import { resetCandidate, setCandidateName, setCandidateEmail, setCandidatePhone } from '../store/slices/candidateSlice';
+import { resetAnswers, startInterview, submitAnswer } from '../store/slices/answersSlice';
+import { addCompletedCandidate } from '../store/slices/candidatesSlice';
 import { generateInterviewQuestions, evaluateAnswer, generateSummary } from '../utils/ai';
 import { ChatMessage } from '../types/chat';
+import { CompletedCandidate } from '../types/candidate';
 import Timer from './Timer';
 
 const { Text } = Typography;
@@ -16,7 +18,7 @@ type InfoCollectionState = 'name' | 'email' | 'phone' | 'confirmation' | 'ready_
 
 const ChatBox: React.FC = () => {
   const dispatch: AppDispatch = useDispatch();
-  const { info: candidateInfo, finalScore } = useSelector((state: RootState) => state.candidate);
+  const { info: candidateInfo } = useSelector((state: RootState) => state.candidate);
   const { messages } = useSelector((state: RootState) => state.chat);
   const { questions, answers, currentQuestionIndex, interviewStatus } = useSelector((state: RootState) => state.answers);
 
@@ -69,29 +71,13 @@ const ChatBox: React.FC = () => {
     if (interviewStatus === 'in_progress' && currentQuestion) {
       sendBotMessage(`Question ${currentQuestionIndex + 1}/${questions.length} (${currentQuestion.level}):\n${currentQuestion.text}`);
     }
-  }, [interviewStatus, currentQuestionIndex, questions.length, currentQuestion, sendBotMessage]);
-
-  useEffect(() => {
-    if (interviewStatus === 'completed' && answers.length === questions.length && questions.length > 0 && !finalScore) {
-      let totalScore = 0;
-      for (const answer of answers) {
-        const question = questions.find(q => q.id === answer.questionId);
-        if (question) {
-          totalScore += evaluateAnswer(question, answer);
-        }
-      }
-
-      const summary = generateSummary();
-      dispatch(setInterviewResult({ finalScore: totalScore, summary }));
-
-      sendBotMessage(`Thank you for completing the interview! \n\nYour final score is ${totalScore}/110. \n\nSummary: ${summary}`);
-    }
-  }, [interviewStatus, answers, questions, finalScore, dispatch, sendBotMessage]);
+  }, [interviewStatus, currentQuestion, currentQuestionIndex, questions.length, sendBotMessage]);
 
   const handleSubmitAnswer = useCallback((answerText: string) => {
     if (!currentQuestion) return;
 
-    dispatch(submitAnswer({ questionId: currentQuestion.id, text: answerText }));
+    const score = evaluateAnswer(currentQuestion, { questionId: currentQuestion.id, text: answerText, score: 0 });
+    dispatch(submitAnswer({ questionId: currentQuestion.id, text: answerText, score }));
 
     const userMessage: ChatMessage = {
       id: `user-ans-${Date.now()}`,
@@ -102,6 +88,34 @@ const ChatBox: React.FC = () => {
     dispatch(addMessage(userMessage));
     setInputValue('');
   }, [dispatch, currentQuestion]);
+
+  useEffect(() => {
+    // This effect handles the session hand-off after the interview is completed.
+    if (interviewStatus === 'completed' && answers.length === questions.length && questions.length > 0) {
+      const finalScore = answers.reduce((total, ans) => total + ans.score, 0);
+      const summary = generateSummary();
+
+      const completedCandidate: CompletedCandidate = {
+        id: candidateInfo.id!,
+        profile: candidateInfo,
+        questions,
+        answers,
+        finalScore,
+        summary,
+        completedAt: Date.now(),
+      };
+
+      dispatch(addCompletedCandidate(completedCandidate));
+      sendBotMessage(`Thank you for completing the interview! \n\nYour final score is ${finalScore}/110. \n\nSummary: ${summary}\n\nThis session will now be reset.`);
+
+      // Reset the state for the next candidate after a delay
+      setTimeout(() => {
+        dispatch(resetCandidate());
+        dispatch(resetAnswers());
+        dispatch(clearChat());
+      }, 5000);
+    }
+  }, [interviewStatus, answers, questions, candidateInfo, dispatch, sendBotMessage]);
 
   const handleSendMessage = () => {
     if (!inputValue.trim()) return;
@@ -132,8 +146,8 @@ const ChatBox: React.FC = () => {
           setInfoState('ready_to_start');
           sendBotMessage('Excellent! Shall we begin the interview? (yes/no)');
         } else {
-          // Simple reset flow for now
-          askNextInfoQuestion({ name: null, email: null, phone: null });
+          dispatch(resetCandidate());
+          askNextInfoQuestion({ id: uuidv4(), name: null, email: null, phone: null });
         }
         break;
       case 'ready_to_start':

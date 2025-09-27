@@ -10,4 +10,5 @@ export interface Question {
 export interface Answer {
   questionId: string;
   text: string;
+  score: number;
 }

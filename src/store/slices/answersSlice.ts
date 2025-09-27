@@ -33,11 +33,11 @@ const answersSlice = createSlice({
         state.interviewStatus = 'completed';
       }
     },
-    endInterview: (state) => {
-      state.interviewStatus = 'completed';
+    resetAnswers: (state) => {
+      Object.assign(state, initialState);
     },
   },
 });
 
-export const { startInterview, submitAnswer, endInterview } = answersSlice.actions;
+export const { startInterview, submitAnswer, resetAnswers } = answersSlice.actions;
 export default answersSlice.reducer;

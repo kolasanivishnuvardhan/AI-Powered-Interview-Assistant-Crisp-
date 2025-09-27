@@ -4,17 +4,19 @@ import storage from 'redux-persist/lib/storage';
 import candidateReducer from './slices/candidateSlice';
 import chatReducer from './slices/chatSlice';
 import answersReducer from './slices/answersSlice';
+import candidatesReducer from './slices/candidatesSlice';
 
 const rootReducer = combineReducers({
   candidate: candidateReducer,
   chat: chatReducer,
   answers: answersReducer,
+  candidates: candidatesReducer,
 });
 
 const persistConfig = {
   key: 'root',
   storage,
-  whitelist: ['candidate'], // Only persist the candidate slice
+  whitelist: ['candidate', 'candidates'], // Persist current candidate and historical candidates
 };
 
 const persistedReducer = persistReducer(persistConfig, rootReducer);

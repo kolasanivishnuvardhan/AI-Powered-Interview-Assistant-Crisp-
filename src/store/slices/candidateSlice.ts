@@ -1,4 +1,5 @@
 import { createSlice, PayloadAction } from '@reduxjs/toolkit';
+import { v4 as uuidv4 } from 'uuid';
 import { Candidate } from '../../types/candidate';
 
 interface CandidateState {
@@ -8,8 +9,10 @@ interface CandidateState {
   summary: string | null;
 }
 
-const initialState: CandidateState = {
+// Function to create a fresh state with a new UUID for a new session
+const createInitialState = (): CandidateState => ({
   info: {
+    id: uuidv4(),
     name: null,
     email: null,
     phone: null,
@@ -17,14 +20,16 @@ const initialState: CandidateState = {
   error: null,
   finalScore: null,
   summary: null,
-};
+});
 
 const candidateSlice = createSlice({
   name: 'candidate',
-  initialState,
+  initialState: createInitialState(),
   reducers: {
+    resetCandidate: () => createInitialState(),
     setCandidateInfo(state, action: PayloadAction<Candidate>) {
-      state.info = action.payload;
+      // Ensure the ID from the new session is preserved when parsing resume
+      state.info = { ...action.payload, id: state.info.id };
       state.error = null;
     },
     setParsingError(state, action: PayloadAction<string>) {
@@ -47,6 +52,7 @@ const candidateSlice = createSlice({
 });
 
 export const {
+  resetCandidate,
   setCandidateInfo,
   setParsingError,
   setCandidateName,
